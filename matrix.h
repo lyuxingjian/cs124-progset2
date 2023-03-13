@@ -37,11 +37,8 @@ class Matrix{
         // Element-wise addition and subtraction
         Matrix& operator+=(const Matrix& A);
         Matrix& operator-=(const Matrix& A);
-
         // Scalar multiplication
         Matrix& operator*=(T c);
-
-        // Matrix& operator=(const Matrix& A);
 
         // Provides copy of matrix slice A[ri:rj, ci:cj] supporting negative indices
         Matrix slice(int ri, int rj, int ci, int cj) const;
@@ -49,9 +46,9 @@ class Matrix{
         // Appends B to current matrix by axis
         Matrix append(const Matrix<T>& B, unsigned int axis) const;
 
-        Matrix simplematmul(const Matrix& B);
+        Matrix simplematmul(const Matrix& Y);
         // Multiplies this matrix with argument, shifting to naive `matmul` under given threshold
-        Matrix strassen(const Matrix&, unsigned int);
+        Matrix strassen(const Matrix& Y, unsigned int threshold=8);
     private:
         // Pads matrix with trailing zero rows and columns to make dimensions even. 
         Matrix pad() const;
@@ -178,21 +175,6 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& A)
     return *this;
 }
 
-// template <class T>
-// Matrix<T>& Matrix<T>::operator=(const Matrix<T>& A){
-//     if (this == &A)
-//         return *this;
-//     allfree();
-//     nrows = A.nrows;
-//     ncols = A.ncols;
-//     alloc();
-//     initialized = true;
-//     for (unsigned int i=0;i<nrows; i++)
-//         for (unsigned int j=0; j<ncols; j++)
-//             M[i][j] = A.M[i][j];
-//     return *this;
-// }
-
 template <class T>
 Matrix<T> Matrix<T>::slice(int ri, int rj, int ci, int cj) const{
     rj = rj < 0 ? nrows + rj : rj;
@@ -244,13 +226,13 @@ void Matrix<T>::allfree(){
 }
 
 template <class T>
-Matrix<T> Matrix<T>::simplematmul(const Matrix& B){
+Matrix<T> Matrix<T>::simplematmul(const Matrix& Y){
     assert (ncols == nrows);
     Matrix<T> C(nrows, ncols, (T)(0));
     for (unsigned int i=0; i<nrows; i++)
         for (unsigned int k=0; k<ncols; k++)
-            for (unsigned int j=0; j<B.ncols; j++)
-                C(i, j) += M[i][k] * B.M[k][j];
+            for (unsigned int j=0; j<Y.ncols; j++)
+                C(i, j) += M[i][k] * Y.M[k][j];
     return C;
 }
 
