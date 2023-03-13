@@ -15,7 +15,6 @@ int main(int argc, char *argv[]){
 
     int D = stoi(dstr);
     Matrix<int> X(D, D), Y(D, D);
-    cout << fname << endl;
     for (auto i=0; i<2*D; i++)
         for (auto j=0; j<D; j++)
             if (infile.is_open())
