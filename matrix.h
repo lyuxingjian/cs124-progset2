@@ -8,8 +8,7 @@ using namespace std;
 template <class T>
 class Matrix{
     public:
-        T** M;
-        // Effective matrix is M[rs:rs+sz, cs:cs+sz]
+        T** M; 
         unsigned int nrows;
         unsigned int ncols; 
         bool initialized = false; 
@@ -20,9 +19,10 @@ class Matrix{
         // Initializes matrix by prescribing `initvalue` to all elements
         Matrix(int nrows, int ncols, T initvalue);
 
-        // Copy constructor: 
+        // Copy constructor: need this since default copy only copies M instead of its 
+        // contents, which may go out of scope
         Matrix(const Matrix<T>& A);
-
+        
         ~Matrix();
 
         // Fills all elements of matrix by `value`. 
@@ -34,15 +34,14 @@ class Matrix{
         // Reference of matrix element x,y
         inline T& operator()(unsigned int x, unsigned int y);
 
-        // Element-wise addition
+        // Element-wise addition and subtraction
         Matrix& operator+=(const Matrix& A);
+        Matrix& operator-=(const Matrix& A);
 
         // Scalar multiplication
         Matrix& operator*=(T c);
 
-        Matrix& operator-=(const Matrix& A);
-
-        Matrix& operator=(const Matrix& A);
+        // Matrix& operator=(const Matrix& A);
 
         // Provides copy of matrix slice A[ri:rj, ci:cj] supporting negative indices
         Matrix slice(int ri, int rj, int ci, int cj) const;
@@ -51,9 +50,11 @@ class Matrix{
         Matrix append(const Matrix<T>& B, unsigned int axis) const;
 
         Matrix simplematmul(const Matrix& B);
+        // Multiplies this matrix with argument, shifting to naive `matmul` under given threshold
         Matrix strassen(const Matrix&, unsigned int);
-        Matrix pad() const;
     private:
+        // Pads matrix with trailing zero rows and columns to make dimensions even. 
+        Matrix pad() const;
         void alloc();
         void allfree();
 };
@@ -83,7 +84,6 @@ Matrix<T> dot(const Matrix<T>& u, const Matrix<T>& v){
     return *(new Matrix<T>(1, 1, a));
 }
 
-
 // Initializes matrix without prescribing values
 template <class T>
 Matrix<T>::Matrix(int nrows, int ncols){
@@ -103,7 +103,6 @@ Matrix<T>::Matrix(int nrows, int ncols, T initvalue){
     allfill_(initvalue);
 }
 
-// Copy constructor: 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T>& A){
     this->nrows = A.nrows;
@@ -179,22 +178,21 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& A)
     return *this;
 }
 
-template <class T>
-Matrix<T>& Matrix<T>::operator=(const Matrix<T>& A){
-    if (this == &A)
-        return *this;
-    allfree();
-    nrows = A.nrows;
-    ncols = A.ncols;
-    alloc();
-    initialized = true;
-    for (unsigned int i=0;i<nrows; i++)
-        for (unsigned int j=0; j<ncols; j++)
-            M[i][j] = A.M[i][j];
-    return *this;
-}
+// template <class T>
+// Matrix<T>& Matrix<T>::operator=(const Matrix<T>& A){
+//     if (this == &A)
+//         return *this;
+//     allfree();
+//     nrows = A.nrows;
+//     ncols = A.ncols;
+//     alloc();
+//     initialized = true;
+//     for (unsigned int i=0;i<nrows; i++)
+//         for (unsigned int j=0; j<ncols; j++)
+//             M[i][j] = A.M[i][j];
+//     return *this;
+// }
 
-// Provides copy of matrix slice A[ri:rj, ci:cj] supporting negative indices
 template <class T>
 Matrix<T> Matrix<T>::slice(int ri, int rj, int ci, int cj) const{
     rj = rj < 0 ? nrows + rj : rj;
@@ -209,7 +207,6 @@ Matrix<T> Matrix<T>::slice(int ri, int rj, int ci, int cj) const{
     return B;
 }
 
-// Appends B to current matrix by axis
 template <class T>
 Matrix<T> Matrix<T>::append(const Matrix<T>& B, unsigned int axis) const {
     assert (axis == 0 || axis == 1);
@@ -289,11 +286,8 @@ Matrix<T> Matrix<T>::strassen(const Matrix<T>& Y, unsigned int threshold){
     P6 += P4; // P6 := P6 + P5 + P4 - P2
     P6 += P5; 
     P6 -= P2; 
-
     P2 += P1; // P2 := P2 + P1
-
     P4 += P3; // P4 := P3 + P4
-
     P1 -= P3; // P1 := P1 - P3 + P65 + P7
     P1 += P5;
     P1 += P7;
