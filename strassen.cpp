@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
         for (auto j=0; j<D; j++)
             if (infile.is_open())
                 infile >> (i<D?X(i, j):Y(i-D, j));
-    auto Z = X.strassen(Y, 64);
+    auto Z = X.strassen(Y);
     for (auto i=0; i<D; i++)
         cout << Z(i, i) << endl;
     infile.close();

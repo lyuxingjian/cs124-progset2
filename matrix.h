@@ -48,7 +48,7 @@ class Matrix{
 
         Matrix simplematmul(const Matrix& Y);
         // Multiplies this matrix with argument, shifting to naive `matmul` under given threshold
-        Matrix strassen(const Matrix& Y, unsigned int threshold=8);
+        Matrix strassen(const Matrix& Y, unsigned int threshold=64);
     private:
         // Pads matrix with trailing zero rows and columns to make dimensions even. 
         Matrix pad() const;
