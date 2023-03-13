@@ -272,6 +272,9 @@ Matrix<T> Matrix<T>::strassen(const Matrix<T>& Y, unsigned int threshold){
     assert (ncols == Y.nrows);
     if (nrows == 1 && Y.ncols == 1)
         return dot(*this, Y);
+    if (ncols <= threshold || ncols <= threshold){
+        return this->simplematmul(Y);
+    }
     // We only implement for square matrices
     if (ncols % 2 != 0 || nrows % 2 != 0 || Y.ncols % 2 != 0){
         return (this->pad()).strassen(Y.pad(), threshold).slice(0, -1, 0, -1);
