@@ -3,6 +3,8 @@
 
 #include<iostream>
 #include<cassert>
+#include<cmath>
+#include<vector>
 using namespace std;
 
 template <class T>
@@ -39,6 +41,7 @@ class Matrix{
         Matrix& operator-=(const Matrix& A);
         // Scalar multiplication
         Matrix& operator*=(T c);
+        Matrix& operator=(const Matrix& A);
 
         // Provides copy of matrix slice A[ri:rj, ci:cj] supporting negative indices
         Matrix slice(int ri, int rj, int ci, int cj) const;
@@ -49,6 +52,8 @@ class Matrix{
         Matrix simplematmul(const Matrix& Y);
         // Multiplies this matrix with argument, shifting to naive `matmul` under given threshold
         Matrix strassen(const Matrix& Y, unsigned int threshold=64);
+        // Matrix exponentiation
+        Matrix pow(unsigned int); 
     private:
         // Pads matrix with trailing zero rows and columns to make dimensions even. 
         Matrix pad() const;
@@ -112,6 +117,20 @@ Matrix<T>::Matrix(const Matrix<T>& A){
 }
 
 template <class T>
+Matrix<T>& Matrix<T>::operator=(const Matrix<T>& A)
+{
+    allfree();
+    this->nrows = A.nrows;
+    this->ncols = A.ncols;
+    alloc();
+    initialized = true;
+    for (unsigned int i=0;i<nrows; i++)
+        for (unsigned int j=0; j<ncols; j++)
+            M[i][j] = A.M[i][j];
+    return *this;
+}
+
+template <class T>
 Matrix<T>::~Matrix<T>()
 {
     allfree();
@@ -144,6 +163,29 @@ inline T& Matrix<T>::operator()(unsigned int x, unsigned int y) {
     return M[x][y]; 
 }
 
+template <class T>
+Matrix<T> Matrix<T>::pow(unsigned int k) { 
+    assert (nrows == ncols); // we can only exponentiate square matrix
+    unsigned int n = nrows;
+
+    // Starts from identity matrix
+    auto A = Matrix<T>(n, n, (T) 0);
+    for (unsigned int i=0; i<n; i++)
+        A(i, i) = (T) 1;
+
+    vector<Matrix<T>> v;
+    v.push_back(*this);
+    // Compute power-two exponents of current matrix
+    while (powf(2.0, (float) v.size()) - 1 < (float) k)
+        v.push_back(v[v.size()-1].strassen(v[v.size()-1]));
+
+    // Accumulate relevant power-two exponents
+    for (unsigned long i=0; i<v.size(); i++)
+        if (((k & (1 << i)) >> i))
+            A = A.strassen(v[i]);
+    return A;
+}
+
 // Element-wise addition
 template <class T>
 Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& A)
@@ -174,6 +216,8 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& A)
             M[i][j] -= A.M[i][j];
     return *this;
 }
+
+
 
 template <class T>
 Matrix<T> Matrix<T>::slice(int ri, int rj, int ci, int cj) const{
